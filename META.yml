@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Alien-GSL
-version:            0.01
+version:            0.02
 abstract:           Easy installation of the GSL library
 author:
     - Joel Berger <joel.a.berger@gmail.com>
