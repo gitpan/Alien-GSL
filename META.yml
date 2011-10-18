@@ -1,29 +1,38 @@
---- #YAML:1.0
-name:               Alien-GSL
-version:            0.02
-abstract:           Easy installation of the GSL library
+---
+abstract: 'Easy installation of the GSL library'
 author:
-    - Joel Berger <joel.a.berger@gmail.com>
-license:            perl
-distribution_type:  module
-configure_requires:
-    Archive::Extract:  0
-    File::Chdir:       0
-    LWP::Simple:       0
+  - 'Joel Berger <joel.a.berger@gmail.com>'
 build_requires:
-    ExtUtils::MakeMaker:  0
-requires:
-    parent:  0
-resources:
-    repository:
-        type:  git
-        url:   git://github.com:jberger/Alien-GSL.git
-        web:   http://github.com/jberger/Alien-GSL
-no_index:
-    directory:
-        - t
-        - inc
-generated_by:       ExtUtils::MakeMaker version 6.57_05
+  Archive::Extract: 0
+  Capture::Tiny: 0
+  File::Temp: 0
+  File::chdir: 0
+  HTTP::Tiny: 0
+  Net::FTP: 0
+  Scalar::Util: 0
+  Test::More: 0
+  perl: 5.008
+configure_requires:
+  Devel::CheckOS: 0
+  Module::Build: 0.38
+  UNIVERSAL::require: 0
+  parent: 0
+  perl: 5.008
+dynamic_config: 1
+generated_by: 'Module::Build version 0.38, CPAN::Meta::Converter version 2.110440'
+license: perl
 meta-spec:
-    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
-    version:  1.4
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Alien-GSL
+provides:
+  Alien::GSL:
+    file: lib/Alien/GSL.pm
+    version: 0.0301
+requires:
+  File::ShareDir: 1.00
+  perl: 5.008
+resources:
+  license: http://dev.perl.org/licenses/
+  repository: http://github.com/jberger/Alien-GSL
+version: 0.0301
