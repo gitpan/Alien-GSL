@@ -1,21 +1,4 @@
-package Alien::GSL;
-
-use strict;
-use warnings;
-
-our $VERSION = 0.03_02;
-$VERSION = eval $VERSION;
-
-use Carp;
-use Alien::GSL::ConfigData;
-use File::ShareDir 'dist_dir';
-use File::chdir;
-
-# if $location eq share_dir then the module was built in share_dir mode 
-
-my $share_dir = (Alien::GSL::ConfigData->config('location') eq 'share_dir') ? dist_dir('Alien-GSL') : '';
-
-=head1 NAME 
+=head1 NAME
 
 Alien::GSL - Easy installation of the GSL library
 
@@ -46,7 +29,7 @@ It will try (at a minimum) to detect if the GSL library is installed on the loca
 
 When running C<./Build>, certain command line flags may be passed, i.e. C<./Build --ShareDir>.
 
-=over
+=over 4
 
 =item C<--Version 1.15>
 
@@ -90,154 +73,25 @@ These functions are basically a functional interface to the C<gsl-config> utilit
 
 Takes no options, returns the version number of the installed GSL library.
 
-=cut
-
-sub gsl_version {
-  my $version;
-
-  if ($share_dir) {
-    $version = Alien::GSL::ConfigData->config('version');
-  } else {
-    $version = qx/ gsl-config --version /;
-    if ($?) {
-      carp "Call to gsl-config --version failed: $!";
-      $version = '';
-    }
-
-    chomp($version);
-  }
-
-  return $version;
-}
-
 =head2 C<require_gsl_version( [$version] )>
 
 A wrapper around C<gsl_version()> which (optionally) takes a number specifying a minimum GSL version, returns the GSL version if it is greater than or equal to that specified. Returns zero otherwise. May also be called with zero as the version parameter, or no parameter at all, in which case the behavior is the same as C<gsl_version()>.
-
-=cut
-
-sub require_gsl_version {
-
-  my $required = shift;
-  $required ||= 0;
-
-  my $have = gsl_version();
-
-  if ($required == 0) {
-    return $have if $have;
-  } 
-
-  if ($have >= $required) {
-    return $have;
-  }
-
-  return 0;
-
-}
 
 =head2 C<gsl_prefix>
 
 Takes no options, returns the "GSL installation prefix".
 
-=cut
-
-sub gsl_prefix {
-  my $prefix;
-
-  if ($share_dir) {
-    return $share_dir;
-  } else {
-    $prefix = qx/ gsl-config --prefix /;
-    if ($?) {
-      carp "Call to gsl-config --prefix failed: $!";
-      $prefix = '';
-    }
-
-    chomp($prefix);
-  }
-
-  return $prefix;
-}
-
 =head2 C<gsl_libs( [opts hash or hash reference] )>
 
 Takes an optional hash or hash reference, returns "library linking information". A hash key C<cblas>, whose value is false will return the "library linking information, without cblas", though by default the cblas information is included.
-
-=cut
-
-sub gsl_libs {
-  my %opts = (ref $_[0] eq 'HASH') ? %{ $_[0] } : @_;
-
-  if (! defined $opts{cblas}) {
-    $opts{cblas} = 1;
-  }
-
-  my $libs;
-  if ($share_dir) {
-
-    my @libs = Alien::GSL::ConfigData->config('libs');
-
-    unless ($opts{cblas}) {
-      @libs = grep { ! /cblas/ } @libs;
-    }
-
-    {
-      local $CWD = $share_dir;
-      push @CWD, 'lib';
-      unshift @libs, '-L' . $CWD;
-    }
-
-    $libs = join(' ', @libs);
-  } else {
-
-    my $call = 'gsl-config --libs';
-
-    unless ($opts{cblas}) {
-      $call .= '-without-cblas';
-    } 
-
-    $libs = qx/ $call /;
-    if ($?) {
-      carp "Call to $call failed: $!";
-    }
-
-    chomp($libs);
-  }
-
-  return $libs;
-}
 
 =head2 C<gsl_cflags>
 
 Takes no options, returns the "pre-processor and compiler flags".
 
-=cut
-
-sub gsl_cflags {
-  my $cflags;
-
-  if ($share_dir) {
-    local $CWD = $share_dir;
-    push @CWD, 'include';
-    $cflags = '-I' . $CWD;
-
-  } else {
-
-    my $command = 'gsl-config --cflags';
-    $cflags = qx/$command/;
-    if ($?) {
-      carp "Call to $command failed: $!";
-    }
-
-    chomp($cflags);
-  }
-
-  return $cflags;
-}
-
 =head1 TODO
 
-=over
+=over 4
 
 =item *
 
@@ -263,7 +117,7 @@ Are tests possible for C<Module::Build> subclasses?
 
 =head1 SEE ALSO
 
-=over
+=over 4
 
 =item L<Math::GSL>
 
@@ -271,7 +125,7 @@ Are tests possible for C<Module::Build> subclasses?
 
 =item L<GSL|http://www.gnu.org/software/gsl/>
 
-=item L<PDL>, L<website|http://pdl.perl.org> 
+=item L<PDL>, L<website|http://pdl.perl.org>
 
 =back
 
@@ -289,9 +143,4 @@ Copyright (C) 2011 by Joel Berger
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
-
-=cut
-
-1;
-
 

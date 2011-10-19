@@ -5,7 +5,7 @@ builder/My/Builder/Windows.pm
 Changes
 lib/Alien/GSL.pm
 MANIFEST			This list of files
-README
+README.pod
 share_dir/README
 t/basic.t
 META.yml

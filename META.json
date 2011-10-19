@@ -4,7 +4,7 @@
       "Joel Berger <joel.a.berger@gmail.com>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.38, CPAN::Meta::Converter version 2.110440",
+   "generated_by" : "Module::Build version 0.3901, CPAN::Meta::Converter version 2.112621",
    "license" : [
       "perl_5"
    ],
@@ -30,7 +30,7 @@
       "configure" : {
          "requires" : {
             "Devel::CheckOS" : 0,
-            "Module::Build" : "0.38",
+            "Module::Build" : "0.39",
             "UNIVERSAL::require" : 0,
             "parent" : 0,
             "perl" : "5.008"
@@ -46,7 +46,7 @@
    "provides" : {
       "Alien::GSL" : {
          "file" : "lib/Alien/GSL.pm",
-         "version" : "0.0301"
+         "version" : "0.0302"
       }
    },
    "release_status" : "stable",
@@ -58,5 +58,5 @@
          "url" : "http://github.com/jberger/Alien-GSL"
       }
    },
-   "version" : "0.0301"
+   "version" : "0.0302"
 }
