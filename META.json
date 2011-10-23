@@ -21,17 +21,23 @@
             "File::Temp" : 0,
             "File::chdir" : 0,
             "HTTP::Tiny" : 0,
+            "Module::Build" : "0.38",
             "Net::FTP" : 0,
             "Scalar::Util" : 0,
-            "Test::More" : 0,
+            "parent" : 0,
             "perl" : "5.008"
          }
       },
       "configure" : {
          "requires" : {
-            "Devel::CheckOS" : 0,
-            "Module::Build" : "0.39",
-            "UNIVERSAL::require" : 0,
+            "Archive::Extract" : 0,
+            "Capture::Tiny" : 0,
+            "File::Temp" : 0,
+            "File::chdir" : 0,
+            "HTTP::Tiny" : 0,
+            "Module::Build" : "0.38",
+            "Net::FTP" : 0,
+            "Scalar::Util" : 0,
             "parent" : 0,
             "perl" : "5.008"
          }
@@ -46,7 +52,7 @@
    "provides" : {
       "Alien::GSL" : {
          "file" : "lib/Alien/GSL.pm",
-         "version" : "0.0302"
+         "version" : "0.0303"
       }
    },
    "release_status" : "stable",
@@ -58,5 +64,5 @@
          "url" : "http://github.com/jberger/Alien-GSL"
       }
    },
-   "version" : "0.0302"
+   "version" : "0.0303"
 }
