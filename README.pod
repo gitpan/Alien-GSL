@@ -89,9 +89,33 @@ Takes an optional hash or hash reference, returns "library linking information".
 
 Takes no options, returns the "pre-processor and compiler flags".
 
+=head2 C<gsl_pkgconfig_location>
+
+Returns the path the folder containing C<gsl.pc> for use with the C<pkg-config> command. This file should be setup during installation, however, it must make a few guesses while doing so. Better to use the other C<gsl_*> commands provided herein when possible.
+
 =head1 TODO
 
 =over 4
+
+=item *
+
+C<gsl-config> script (replaces executable for C<File::ShareDir> installs)
+
+=over 4
+
+=item *
+
+Document with POD rather than usage statement (pod2usage?).
+
+=item *
+
+Figure out how to handle script and executable both being in path.
+
+=item *
+
+Figure out how to launch script on Windows using a C<gsl-config.bat>.
+
+=back
 
 =item *
 
@@ -99,7 +123,11 @@ Find a better download site for the compiled libraries.
 
 =item *
 
-Build 64 bit libraries.
+Provide 64 bit libraries.
+
+=item *
+
+Allow build when C<make> exists (i.e. on strawberry).
 
 =item *
 

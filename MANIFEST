@@ -5,8 +5,10 @@ builder/My/Builder/Windows.pm
 Changes
 lib/Alien/GSL.pm
 MANIFEST			This list of files
-META.json
-META.yml
 README.pod
+script/gsl-config.pl
 share_dir/README
-t/basic.t
+t/00-use.t
+t/locations.t
+META.yml
+META.json

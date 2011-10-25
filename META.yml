@@ -5,6 +5,7 @@ author:
 build_requires:
   Archive::Extract: 0
   Capture::Tiny: 0
+  File::Spec::Functions: 0
   File::Temp: 0
   File::chdir: 0
   HTTP::Tiny: 0
@@ -16,6 +17,7 @@ build_requires:
 configure_requires:
   Archive::Extract: 0
   Capture::Tiny: 0
+  File::Spec::Functions: 0
   File::Temp: 0
   File::chdir: 0
   HTTP::Tiny: 0
@@ -34,11 +36,13 @@ name: Alien-GSL
 provides:
   Alien::GSL:
     file: lib/Alien/GSL.pm
-    version: 0.0303
+    version: 0.0304
 requires:
   File::ShareDir: 1.00
+  File::chdir: 0
+  List::MoreUtils: 0
   perl: 5.008
 resources:
   license: http://dev.perl.org/licenses/
   repository: http://github.com/jberger/Alien-GSL
-version: 0.0303
+version: 0.0304

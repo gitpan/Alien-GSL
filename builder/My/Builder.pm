@@ -16,6 +16,7 @@ use HTTP::Tiny;
 use Net::FTP;
 use Archive::Extract;
 use Capture::Tiny 'capture';
+use File::Spec::Functions 'catdir';
 
 our $FTP_SERVER = 'ftp.gnu.org';
 our $FTP_FOLDER = '/gnu/gsl';
@@ -23,20 +24,20 @@ our $CMD_GSL_CONFIG = 'gsl-config';
 
 ## Generic Methods ##
 
-sub new {
-  my $class = shift;
+#sub new {
+#  my $class = shift;
 
-  my $self = $class->SUPER::new(@_);
+#  my $self = $class->SUPER::new(@_);
 
-  bless($self, $class);
+#  bless($self, $class);
 
   # default to a share_dir install
   # My::Builder::Unix overrides this to make system default
 
-  $self->config_data(location => 'share_dir');
+  #$self->config_data(location => 'share_dir');
 
-  return $self;
-}
+#  return $self;
+#}
 
 sub have_gsl_version {
 
@@ -64,17 +65,31 @@ sub ACTION_code {
 
   my $have_version = $self->have_gsl_version;
 
-  if ( $have_version and ! $self->args('Force') and ! $self->args('ShareDir') ) {
+  if ($self->is_share_dir_populated()) {
+    print "Found GSL in share_dir\n";
+
+    unless ($self->config_data('location')) {
+      $self->config_data('location' => 'share_dir');
+    }
+
+    unless ( $self->config_data('location') eq 'share_dir' and $self->config_data( 'libs' ) ) {
+      $self->parse_rewrite_pc_file();
+    }
+
+  } elsif ( $have_version and ! $self->args('Force') and ! $self->args('ShareDir') ) {
+    print "Found system-wide installation of GSL. This will be used by Alien::GSL.\n";
+
     $self->config_data( location => 'system' );
   } else  {
     my $download_dir = $self->get_download_dir();
 
-    my $dir = $self->fetch($download_dir, $self->args('Version'));
+    my $extract_dir = $self->fetch($download_dir, $self->args('Version'));
 
-    if ( $self->gsl_make_install($dir) ) {
+    if ( $self->gsl_make_install($extract_dir) ) {
       print "Build/Install libgsl succeeded\n"; 
       if ($self->config_data('location') eq 'share_dir') {
-        $self->set_share_dir_data();
+        #$self->set_share_dir_data();
+        $self->parse_rewrite_pc_file();
       }
     } else {
       print "Build/Install libgsl failed\n";
@@ -88,6 +103,16 @@ sub ACTION_code {
 
   $self->SUPER::ACTION_code;
 }
+
+#sub ACTION_install {
+#  my $self = shift;
+
+#  $self->SUPER::ACTION_install();
+
+#  if ($self->config_data('location') eq 'share_dir') {
+#    $self->rewrite_pc_file();
+#  }
+#}
 
 sub get_download_dir {
   my $self = shift;
@@ -156,7 +181,7 @@ sub fetch {
 
   my $from = $available->{$version}{from};
   my $file = $available->{$version}{file};
-  $self->config_data( version => $version);
+  $self->config_data( version => $version );
 
   local $CWD = "$dir";
 
@@ -198,7 +223,7 @@ sub available_source {
   my $self = shift;
 
   my $ftp = Net::FTP->new($FTP_SERVER, Debug => 0)
-    or croak "Cannot connect to some.host.name: $@";
+    or croak "Cannot connect to $FTP_SERVER: $@";
 
   $ftp->login() or croak "Cannot login ", $ftp->message;
 
@@ -228,19 +253,21 @@ sub gsl_make_install {
   croak "Folder does not contain AutoConf scripts" unless (-e 'configure');
 
   my $configure_command = $self->local_exec_prefix() . 'configure';
-  my $is_root = ($< != 0);
+  my $is_root = ($< == 0);
 
   if ($self->args('ShareDir') or ! $is_root) {
-    print "Using install method: ShareDir\n";
+    print "Using install method: File::ShareDir\n";
+
+    $self->config_data( location => 'share_dir' );
 
     # for share_dir install get full path to share_dir
     local $CWD = $self->base_dir();
     push @CWD, 'share_dir';
     $configure_command .= " --prefix=$CWD";
 
-    $self->config_data( location => 'share_dir' );
-
   } else {
+
+    print "Using install method: system-wide\n";
 
     $self->config_data( location => 'system' );
 
@@ -290,30 +317,95 @@ sub available_compiled {
 
 ## ShareDir Methods ##
 
-sub set_share_dir_data {
+#sub set_share_dir_data {
+#  my $self = shift;
+
+#  my @libs = qw( -lgsl -lgslcblas -lm ); # hard code libs rather than determine
+#  $self->config_data( libs => \@libs );
+
+#}
+
+sub is_share_dir_populated {
   my $self = shift;
 
-  #local $CWD;
-  #push @CWD, qw'share_dir bin';
-  #my $base_command = $self->local_exec_prefix() . 'gsl-config';
+  local $CWD = 'share_dir';
+  return 0 unless (-d 'lib');
 
-  #{
-    # emulate gsl-config --libs
+  push @CWD, 'lib';
 
-    #my $command = $base_command . ' --libs';
-    #my $libs_str = qx/$command/;
-    #if ($?) {
-    #  carp "Could not execute $command: $!";
-    #  $libs_str = '';
-    #}
+  opendir(my $dh, $CWD);
+  my @found = grep { /gsl/ } readdir($dh);
 
-    #chomp($libs_str);
-    #my @libs = grep { ! /^-L/ } split(/ /, $libs_str);
-	my @libs = qw( -lgsl -lgslcblas -lm ); # hard code libs rather than determine
-    $self->config_data( libs => \@libs );
+  return !! @found;
+}
 
-  #}
-  
+sub parse_rewrite_pc_file {
+  my $self = shift;
+
+  my $path = catdir(
+    $self->install_destination('lib'),
+    qw/auto share dist Alien-GSL/,
+  );
+
+  local $CWD = 'share_dir';
+  push @CWD, qw/lib pkgconfig/;
+
+  open my $fh, '<', 'gsl.pc' or croak "Could not open gsl.pc (read): $!";
+  my @pc = <$fh>;
+  chomp @pc;
+
+  open $fh, '>', 'gsl.pc' or croak "Could not open gsl.pc (write): $!";
+
+  my $old_path = '';
+  my $lib_path = catdir( $path, 'lib');
+  my @libs;
+
+  my $inc_path = catdir( $path, 'include');
+  my @inc;
+
+  my %pc_vars;
+
+  foreach (@pc) {
+    if (/^prefix=(.*)/) {
+      $old_path = $1;
+	  #windows compat
+	  $old_path =~ s'\\'\\\\'g;
+      print $fh "prefix=$path\n";
+    } elsif (/^exec_prefix=/) {
+      print $fh "exec_prefix=$path\n";
+    } elsif (/^libdir=/) {
+      print $fh "libdir=$lib_path\n";
+    } elsif (/^includedir=/) {
+      print $fh "includedir=$inc_path\n";
+    } elsif ( s/Libs:\s*// ) {
+      @libs = grep {! /^-L$old_path/ } split;
+      print $fh "Libs: -L$lib_path " . join(' ', @libs) . "\n";
+    } elsif ( s/Cflags:\s*// ) {
+      @inc = grep { ! /^-I$old_path/ } split;
+      print $fh "Cflags: -I$inc_path " . join(' ', @inc) . "\n";
+    } else {
+      if (/=/) {
+        my ($key, $val) = split /\s*=\s*/, $_ , 2;
+        $pc_vars{$key} = $val;
+      }
+      print $fh "$_\n";
+    }
+  }
+
+  for (@libs, @inc) {
+    if ( /\$\{([^\}]+)\}/ and exists $pc_vars{$1} ) {
+      my $rep = $pc_vars{$1};
+      s/\$\{$1\}/$rep/;
+    }
+  }
+
+  $self->config_data( libs => \@libs );
+  $self->config_data( inc => \@inc );
+}
+
+sub add_share_dir_contents_to_cleanup {
+  # not yet implemented
+  return 1;
 }
 
 1;

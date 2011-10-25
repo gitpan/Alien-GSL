@@ -3,17 +3,20 @@ package Alien::GSL;
 use strict;
 use warnings;
 
-our $VERSION = 0.03_03;
+our $VERSION = 0.03_04;
 $VERSION = eval $VERSION;
 
 use Carp;
 use Alien::GSL::ConfigData;
 use File::ShareDir 'dist_dir';
 use File::chdir;
+use List::MoreUtils 'uniq';
 
-# if $location eq share_dir then the module was built in share_dir mode 
-
-my $share_dir = (Alien::GSL::ConfigData->config('location') eq 'share_dir') ? dist_dir('Alien-GSL') : '';
+# if $location eq share_dir then the module was built in share_dir mode
+our $share_dir = '';
+eval {
+  $share_dir = dist_dir('Alien-GSL') if (Alien::GSL::ConfigData->config('location') eq 'share_dir');
+};
 
 =head1 NAME 
 
@@ -175,7 +178,7 @@ sub gsl_libs {
   my $libs;
   if ($share_dir) {
 
-    my @libs = Alien::GSL::ConfigData->config('libs');
+    my @libs = uniq @{Alien::GSL::ConfigData->config('libs')};
 
     unless ($opts{cblas}) {
       @libs = grep { ! /cblas/ } @libs;
@@ -217,9 +220,11 @@ sub gsl_cflags {
   my $cflags;
 
   if ($share_dir) {
+    my @inc = uniq @{Alien::GSL::ConfigData->config('inc')};
+
     local $CWD = $share_dir;
     push @CWD, 'include';
-    $cflags = '-I' . $CWD;
+    $cflags = "-I$CWD " . join(' ', @inc);
 
   } else {
 
@@ -235,9 +240,56 @@ sub gsl_cflags {
   return $cflags;
 }
 
+=head2 C<gsl_pkgconfig_location>
+
+Returns the path the folder containing C<gsl.pc> for use with the C<pkg-config> command. This file should be setup during installation, however, it must make a few guesses while doing so. Better to use the other C<gsl_*> commands provided herein when possible.
+
+=cut
+
+sub gsl_pkgconfig_location {
+  my $pc_file = '';
+
+  if ($share_dir) {
+    local $CWD = $share_dir;
+    push @CWD, qw/lib pkgconfig/;
+    
+    if (-e 'gsl.pc') {
+      $pc_file = $CWD;
+    } else {
+      warn "pkg-config data (gsl.pc) is not where it should be: $CWD";
+    }
+
+  } else {
+    warn "pkg-config data (gsl.pc) is not tracked for system-installed Alien::GSL";
+  }
+
+  return $pc_file;
+
+}
+
 =head1 TODO
 
 =over
+
+=item *
+
+C<gsl-config> script (replaces executable for C<File::ShareDir> installs)
+
+=over
+
+=item *
+
+Document with POD rather than usage statement (pod2usage?).
+
+=item *
+
+Figure out how to handle script and executable both being in path.
+
+=item *
+
+Figure out how to launch script on Windows using a C<gsl-config.bat>.
+
+=back
 
 =item *
 
@@ -245,7 +297,11 @@ Find a better download site for the compiled libraries.
 
 =item *
 
-Build 64 bit libraries.
+Provide 64 bit libraries.
+
+=item *
+
+Allow build when C<make> exists (i.e. on strawberry).
 
 =item *
 
