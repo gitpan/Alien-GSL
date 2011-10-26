@@ -11,28 +11,37 @@ BEGIN {
 
   %conf_req = (
     'perl'                  => '5.008',
-    'Module::Build'         => '0.38',
+    'lib'                   => 0,
     'parent'                => 0,
+    'Module::Build'         => '0.38',
+    'Carp'                  => 0,
     'Scalar::Util'          => 0,
-    'Archive::Extract'      => 0,
-    'File::chdir'           => 0,
     'File::Temp'            => 0,
+    'File::chdir'           => 0,
     'HTTP::Tiny'            => 0,
     'Net::FTP'              => 0,
+    'Archive::Extract'      => 0,
     'Capture::Tiny'         => 0,
     'File::Spec::Functions' => 0,
+    'Sort::Versions'        => 0,
   );
 
-  foreach my $module (keys %conf_req) {
-    next if $module eq 'perl';
+  my @failed = 
+    grep { ! Module::Build->check_installed_version($_, $conf_req{$_}) } 
+    grep { $_ ne 'perl' } 
+    keys %conf_req;
 
-    unless ( Module::Build->check_installed_version($module, $conf_req{$module}) ) {
-      print "You need to install $module, before configuring Alien::GSL\n";
-      if ($ENV{AUTOMATED_TESTING}) {
-        exit 0;
-      } else {
-        die;
-      }
+  ## allows `die` without adding a "BEGIN failed--compilation aborted" message which clutters up the warning the user sees
+  local $SIG{__DIE__} = sub {warn @_; exit 1};
+
+  if (@failed) {
+    local $" = ' ';
+    my $message = "Some needed modules are missing or must be upgraded before configuring Alien::GSL.\nThose modules are:\t@failed\n";
+    if ($ENV{AUTOMATED_TESTING}) {
+      print $message;
+      exit 0;
+    } else {
+      die $message;
     }
   }
 
@@ -58,6 +67,7 @@ my $builder = $builder_class->new(
   license            => 'perl',
   requires => {
     'perl'            => '5.008',
+    'Carp'            => 0,
     'File::ShareDir'  => 0,
     'File::chdir'     => 0,
     'List::MoreUtils' => 0,
